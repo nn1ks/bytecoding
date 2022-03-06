@@ -1,0 +1,19 @@
+[package]
+name = "bytecoding_derive"
+description = "Derive macro for encoding and decoding instructions and operands as bytecode"
+version = "0.0.0"
+authors = ["Niklas Sauter <niklas@n1ks.net>"]
+edition = "2021"
+repository = "https://github.com/nn1ks/bytecoding"
+readme = "../README.md"
+license = "Apache-2.0 OR MIT"
+
+[lib]
+proc_macro = true
+
+[dependencies]
+itertools = "0.10.3"
+proc-macro-error = "1.0.4"
+proc-macro2 = "1.0.36"
+quote = "1.0.15"
+syn = { version = "1.0.86", features = ["full"] }

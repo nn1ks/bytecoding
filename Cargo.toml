@@ -1,0 +1,17 @@
+[package]
+name = "bytecoding"
+description = "Derive macro for encoding and decoding instructions and operands as bytecode"
+version = "0.0.0"
+authors = ["Niklas Sauter <niklas@n1ks.net>"]
+edition = "2021"
+repository = "https://github.com/nn1ks/bytecoding"
+readme = "README.md"
+license = "Apache-2.0 OR MIT"
+
+[workspace]
+members = ["bytecoding_derive"]
+
+[dependencies]
+bytecoding_derive = { path = "bytecoding_derive" }
+bytes = "1.1.0"
+paste = "1.0.6"
