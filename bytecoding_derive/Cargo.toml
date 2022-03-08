@@ -1,7 +1,7 @@
 [package]
 name = "bytecoding_derive"
 description = "Derive macro for encoding and decoding instructions and operands as bytecode"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Niklas Sauter <niklas@n1ks.net>"]
 edition = "2021"
 repository = "https://github.com/nn1ks/bytecoding"
