@@ -68,9 +68,9 @@
 //!     },
 //!
 //!     // This generates two instruction codes (without an operand):
-//!     // - The first code is for pushing the value `true`
-//!     // - The second code is for pushing the value `false`
-//!     PushBool(#[bytecode(flatten_all = [true, false])] bool),
+//!     // - The first code is for the value `true`
+//!     // - The second code is for the value `false`
+//!     Bool(#[bytecode(flatten_all = [true, false])] bool),
 //! }
 //!
 //! # fn main() -> Result<(), bytecoding::DecodeError> {
@@ -81,8 +81,8 @@
 //!     Instruction::Jump(42),
 //!     Instruction::Const { index: 0 },
 //!     Instruction::Const { index: 4 },
-//!     Instruction::PushBool(true),
-//!     Instruction::PushBool(false),
+//!     Instruction::Bool(true),
+//!     Instruction::Bool(false),
 //! ];
 //!
 //! // Encoding
@@ -90,7 +90,16 @@
 //! for instruction in &instructions {
 //!     instruction.encode(&mut buf);
 //! }
-//! assert_eq!(buf, vec![1, 0, 3, 20, 0, 30, 2, 42, 4, 8, 0, 4, 9, 10]);
+//! assert_eq!(buf, vec![
+//!     1, // Sub
+//!     0, // Add
+//!     3, 20, 0, 30, // Foo(Operand { value1: 20, value2: 30 })
+//!     2, 42, // Jump(42)
+//!     4, // Const { index: 0 }
+//!     8, 0, 4, // Const { index: 4 }
+//!     9, // Bool(true)
+//!     10, // Bool(false)
+//! ]);
 //!
 //! // Decoding
 //! let mut buf: &[u8] = &buf;
