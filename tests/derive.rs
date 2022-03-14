@@ -69,25 +69,25 @@ fn flatten() {
     #[derive(Debug, PartialEq, Eq, Bytecode)]
     #[bytecode(type = u8)]
     enum Instruction {
-        Foo(u16, #[bytecode(flatten = [1, 0])] u64),
-        Bar {
+        A(u16, #[bytecode(flatten = [1, 0])] u64),
+        B {
             #[bytecode(flatten = [10, 11, 12, 13])]
             a: u32,
             b: u8,
         },
-        Baz(#[bytecode(flatten = [100])] u8),
+        C(#[bytecode(flatten = [100])] u8),
     }
 
     let instructions = [
-        Instruction::Foo(10, 1),
-        Instruction::Foo(11, 0),
-        Instruction::Foo(12, 2),
-        Instruction::Bar { a: 10, b: 42 },
-        Instruction::Bar { a: 13, b: 42 },
-        Instruction::Bar { a: 0, b: 42 },
-        Instruction::Bar { a: 14, b: 42 },
-        Instruction::Baz(100),
-        Instruction::Baz(99),
+        Instruction::A(10, 1),
+        Instruction::A(11, 0),
+        Instruction::A(12, 2),
+        Instruction::B { a: 10, b: 42 },
+        Instruction::B { a: 13, b: 42 },
+        Instruction::B { a: 0, b: 42 },
+        Instruction::B { a: 14, b: 42 },
+        Instruction::C(100),
+        Instruction::C(99),
     ];
     #[rustfmt::skip]
     let expected_bytes = [
@@ -118,14 +118,14 @@ fn flatten_all() {
         A(#[bytecode(flatten_all = [true, false])] bool),
         B {
             #[bytecode(flatten_all = [true, false])]
-            value: bool,
+            a: bool,
         },
         C(u32, #[bytecode(flatten_all = [false, true])] bool),
         D {
             #[bytecode(flatten_all = [false, true])]
-            value1: bool,
-            value2: u16,
-            value3: u8,
+            a: bool,
+            b: u16,
+            c: u8,
         },
         E(#[bytecode(flatten_all = [Foo::Bar, Foo::Baz])] Foo),
     }
@@ -133,19 +133,19 @@ fn flatten_all() {
     let instructions = [
         Instruction::A(true),
         Instruction::A(false),
-        Instruction::B { value: true },
-        Instruction::B { value: false },
+        Instruction::B { a: true },
+        Instruction::B { a: false },
         Instruction::C(10, false),
         Instruction::C(11, true),
         Instruction::D {
-            value1: false,
-            value2: 20,
-            value3: 1,
+            a: false,
+            b: 20,
+            c: 1,
         },
         Instruction::D {
-            value1: true,
-            value2: 21,
-            value3: 2,
+            a: true,
+            b: 21,
+            c: 2,
         },
         Instruction::E(Foo::Bar),
         Instruction::E(Foo::Baz),
@@ -181,14 +181,14 @@ fn skip() {
         A(#[bytecode(skip)] bool),
         B {
             #[bytecode(skip)]
-            value: bool,
+            a: bool,
         },
         C(u8, #[bytecode(skip)] String),
         D {
             #[bytecode(skip)]
-            value1: usize,
-            value2: u8,
-            value3: u16,
+            a: usize,
+            b: u8,
+            c: u16,
         },
         E(Operand),
     }
@@ -196,20 +196,12 @@ fn skip() {
     let instructions = [
         Instruction::A(true),
         Instruction::A(false),
-        Instruction::B { value: true },
-        Instruction::B { value: false },
+        Instruction::B { a: true },
+        Instruction::B { a: false },
         Instruction::C(10, "foo".to_owned()),
         Instruction::C(11, String::new()),
-        Instruction::D {
-            value1: 42,
-            value2: 20,
-            value3: 1,
-        },
-        Instruction::D {
-            value1: 43,
-            value2: 21,
-            value3: 2,
-        },
+        Instruction::D { a: 42, b: 20, c: 1 },
+        Instruction::D { a: 43, b: 21, c: 2 },
         Instruction::E(Operand {
             value1: "bar".to_owned(),
             value2: 1,
@@ -237,20 +229,12 @@ fn skip() {
     let expected_instructions = [
         Instruction::A(false),
         Instruction::A(false),
-        Instruction::B { value: false },
-        Instruction::B { value: false },
+        Instruction::B { a: false },
+        Instruction::B { a: false },
         Instruction::C(10, String::new()),
         Instruction::C(11, String::new()),
-        Instruction::D {
-            value1: 0,
-            value2: 20,
-            value3: 1,
-        },
-        Instruction::D {
-            value1: 0,
-            value2: 21,
-            value3: 2,
-        },
+        Instruction::D { a: 0, b: 20, c: 1 },
+        Instruction::D { a: 0, b: 21, c: 2 },
         Instruction::E(Operand {
             value1: String::new(),
             value2: 1,
