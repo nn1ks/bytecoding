@@ -11,6 +11,16 @@
 //!     Sets which type is used for the instruction code. Possible values are `u8`, `u16`, `u32`,
 //!     and `u64`.
 //!
+//! ## Variant attributes
+//!
+//! Attributes that can be used on enum variants.
+//!
+//! - `code = ...`
+//!
+//!     Sets the instruction codes for this enum variant. A code has to be specified for every
+//!     instruction this variant generates. If the variant only generates one instruction, then a
+//!     single number can be used for the `code` attribute (instead of a list of numbers).
+//!
 //! ## Variant field attributes
 //!
 //! Attributes that can be used on fields of enum variants.

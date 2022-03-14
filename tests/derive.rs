@@ -246,3 +246,113 @@ fn skip() {
     ];
     test_decode(&expected_bytes, &expected_instructions);
 }
+
+#[test]
+fn explicit_code() {
+    #[derive(Debug, PartialEq, Eq, Bytecode)]
+    #[bytecode(type = u8)]
+    enum Instruction {
+        #[bytecode(code = 3)]
+        A,
+        #[bytecode(code = [1])]
+        B,
+        #[bytecode(code = 42)]
+        C,
+
+        #[bytecode(code = [10, 11, 12, 13])]
+        D(#[bytecode(flatten = [0, 1, 2])] u8),
+
+        #[bytecode(code = [20, 21, 22, 23, 24, 25])]
+        E {
+            #[bytecode(flatten = [0, 1])]
+            a: u16,
+            #[bytecode(flatten_all = [true, false])]
+            b: bool,
+        },
+    }
+
+    let instructions = [
+        Instruction::A,
+        Instruction::B,
+        Instruction::C,
+        Instruction::D(0),
+        Instruction::D(1),
+        Instruction::D(2),
+        Instruction::D(3),
+        Instruction::E { a: 0, b: true },
+        Instruction::E { a: 0, b: false },
+        Instruction::E { a: 1, b: true },
+        Instruction::E { a: 1, b: false },
+        Instruction::E { a: 2, b: true },
+        Instruction::E { a: 2, b: false },
+    ];
+    #[rustfmt::skip]
+    let expected_bytes = [
+        3,
+        1,
+        42,
+        10,
+        11,
+        12,
+        13, 3,
+        20,
+        21,
+        22,
+        23,
+        24, 0, 2,
+        25, 0, 2,
+    ];
+    test_encode_decode(&instructions, &expected_bytes);
+}
+
+#[test]
+fn explicit_and_implicit_code() {
+    #[derive(Debug, PartialEq, Eq, Bytecode)]
+    #[bytecode(type = u8)]
+    enum Instruction {
+        A,
+        #[bytecode(code = 0)]
+        B,
+        #[bytecode(code = 42)]
+        C,
+        D,
+        #[bytecode(code = [2])]
+        E,
+
+        F {
+            #[bytecode(flatten_all = [true, false])]
+            a: bool,
+            b: u32,
+        },
+
+        #[bytecode(code = [10, 11])]
+        G(#[bytecode(flatten = [1])] u16),
+    }
+
+    let instructions = [
+        Instruction::A,
+        Instruction::B,
+        Instruction::C,
+        Instruction::D,
+        Instruction::E,
+        Instruction::F { a: true, b: 0 },
+        Instruction::F { a: false, b: 1 },
+        Instruction::G(0),
+        Instruction::G(1),
+        Instruction::G(2),
+    ];
+    #[rustfmt::skip]
+    let expected_bytes = [
+        1,
+        0,
+        42,
+        3,
+        2,
+        4, 0, 0, 0, 0,
+        5, 0, 0, 0, 1,
+        11, 0, 0,
+        10,
+        11, 0, 2,
+    ];
+    test_encode_decode(&instructions, &expected_bytes);
+}

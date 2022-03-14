@@ -1,7 +1,6 @@
-use core::fmt;
+use core::{fmt, hash::Hash};
 use proc_macro2::{Literal, Span, TokenStream, TokenTree};
 use proc_macro_error::{abort, abort_call_site, emit_error, proc_macro_error, Diagnostic};
-use quote::quote;
 use syn::parse::{Parse, ParseStream, Parser};
 use syn::{punctuated::Punctuated, spanned::Spanned, Token};
 
@@ -32,6 +31,69 @@ enum InstructionType {
     U16,
     U32,
     U64,
+}
+
+trait InstructionTypeTrait:
+    Copy
+    + Eq
+    + Ord
+    + Hash
+    + fmt::Display
+    + num_traits::Unsigned
+    + num_traits::Bounded
+    + num_traits::ToPrimitive
+{
+    const BYTES: usize;
+    fn to_literal(self) -> Literal;
+    fn literal_parse_base10(lit: &syn::LitInt) -> syn::Result<Self>;
+}
+
+impl InstructionTypeTrait for u8 {
+    const BYTES: usize = 1;
+
+    fn to_literal(self) -> Literal {
+        Literal::u8_suffixed(self)
+    }
+
+    fn literal_parse_base10(lit: &syn::LitInt) -> syn::Result<Self> {
+        lit.base10_parse()
+    }
+}
+
+impl InstructionTypeTrait for u16 {
+    const BYTES: usize = 2;
+
+    fn to_literal(self) -> Literal {
+        Literal::u16_suffixed(self)
+    }
+
+    fn literal_parse_base10(lit: &syn::LitInt) -> syn::Result<Self> {
+        lit.base10_parse()
+    }
+}
+
+impl InstructionTypeTrait for u32 {
+    const BYTES: usize = 4;
+
+    fn to_literal(self) -> Literal {
+        Literal::u32_suffixed(self)
+    }
+
+    fn literal_parse_base10(lit: &syn::LitInt) -> syn::Result<Self> {
+        lit.base10_parse()
+    }
+}
+
+impl InstructionTypeTrait for u64 {
+    const BYTES: usize = 8;
+
+    fn to_literal(self) -> Literal {
+        Literal::u64_suffixed(self)
+    }
+
+    fn literal_parse_base10(lit: &syn::LitInt) -> syn::Result<Self> {
+        lit.base10_parse()
+    }
 }
 
 struct FieldAttributes {
@@ -133,47 +195,6 @@ impl UnnamedField {
     }
 }
 
-impl InstructionType {
-    fn type_ident(self) -> syn::Ident {
-        let s = match self {
-            Self::U8 => "u8",
-            Self::U16 => "u16",
-            Self::U32 => "u32",
-            Self::U64 => "u64",
-        };
-        syn::Ident::new(s, Span::call_site())
-    }
-
-    fn casted_literal(self, value: usize) -> Option<Literal> {
-        Some(match self {
-            Self::U8 => Literal::u8_suffixed(value.try_into().ok()?),
-            Self::U16 => Literal::u16_suffixed(value.try_into().ok()?),
-            Self::U32 => Literal::u32_suffixed(value.try_into().ok()?),
-            Self::U64 => Literal::u64_suffixed(value.try_into().ok()?),
-        })
-    }
-
-    const fn num_bytes(self) -> usize {
-        match self {
-            Self::U8 => 1,
-            Self::U16 => 2,
-            Self::U32 => 4,
-            Self::U64 => 8,
-        }
-    }
-}
-
-impl fmt::Display for InstructionType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            Self::U8 => "u8",
-            Self::U16 => "u16",
-            Self::U32 => "u32",
-            Self::U64 => "u64",
-        })
-    }
-}
-
 struct AttributeItem {
     name: syn::Ident,
     value: Option<TokenTree>,
@@ -269,18 +290,24 @@ fn impl_bytecode(ast: &syn::DeriveInput) -> TokenStream {
         syn::Data::Enum(v) => {
             let type_ =
                 type_.unwrap_or_else(|| abort_call_site!("Missing required attribute `type`"));
-            impl_enum::impl_bytecode(&ast.ident, &ast.generics, type_, &v.variants)
+            match type_.value {
+                InstructionType::U8 => {
+                    impl_enum::impl_bytecode::<u8>(&ast.ident, &ast.generics, &v.variants)
+                }
+                InstructionType::U16 => {
+                    impl_enum::impl_bytecode::<u16>(&ast.ident, &ast.generics, &v.variants)
+                }
+                InstructionType::U32 => {
+                    impl_enum::impl_bytecode::<u32>(&ast.ident, &ast.generics, &v.variants)
+                }
+                InstructionType::U64 => {
+                    impl_enum::impl_bytecode::<u64>(&ast.ident, &ast.generics, &v.variants)
+                }
+            }
         }
         syn::Data::Union(_) => abort!(
             ast.span(),
             "Union types are not supported by the `Bytecode` derive macro"
         ),
     }
-}
-
-fn buf_put_method_call(instruction_type: InstructionType, i: usize) -> TokenStream {
-    let type_ident = instruction_type.type_ident();
-    let method_ident = syn::Ident::new(&format!("put_{}", type_ident), Span::call_site());
-    let literal = instruction_type.casted_literal(i);
-    quote! { buf.#method_ident(#literal) }
 }
