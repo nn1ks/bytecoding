@@ -1,5 +1,7 @@
 //! Derive macro for encoding and decoding instructions and operands as bytecode.
 //!
+//! Note that only big-endian byte ordering is supported by this crate.
+//!
 //! # Derive macro
 //!
 //! ## Enum attributes
